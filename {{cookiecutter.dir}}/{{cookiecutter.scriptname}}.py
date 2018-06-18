@@ -58,23 +58,30 @@ except ImportError:
     reset=''
     colors = {'success': '', 'error': '', 'warning': '', 'info':''}
 
-def alert(atype, text, log):
-    textout = '%s [%s] %s\n' % (time.strftime('%Y%m%d-%H:%M:%S'),
-                                atype.rjust(7),
-                                text)
-    log.write('%s%s%s' % (colors[atype], textout, reset))
+def alert(atype, text, log, repeat=False):
+    if repeat:
+        textout = '{} [{}] {}\r'.format(time.strftime('%Y%m%d-%H:%M:%S'),
+                                        atype.rjust(7),
+                                        text)
+    else:
+        textout = '{} [{}] {}\n'.format(time.strftime('%Y%m%d-%H:%M:%S'),
+                                        atype.rjust(7),
+                                        text)
+
+    
+    log.write('{}{}{}'.format(colors[atype], textout, reset))
     if atype=='error': sys.exit()
-        
+
 def success(text, log=sys.stderr):
     alert('success', text, log)
-    
+
 def error(text, log=sys.stderr):
     alert('error', text, log)
-    
+
 def warning(text, log=sys.stderr):
     alert('warning', text, log)
     
-def info(text, log=sys.stderr):
+def info(text, log=sys.stderr, repeat=False):
     alert('info', text, log)  
 
     
@@ -82,14 +89,14 @@ def parse_cmdline():
     """ Parse command-line args. """
     ## parse cmd-line -----------------------------------------------------------
     description = 'Read delimited file.'
-    version = 'version %s, date %s' % (__version__, __date__)
-    epilog = 'Copyright %s (%s)' % (__author__, __email__)
+    version = 'version {}, date {}'.format(__version__, __date__)
+    epilog = 'Copyright {} ({})'.format(__author__, __email__)
 
     parser = argparse.ArgumentParser(description=description, epilog=epilog)
 
     parser.add_argument('--version',
                         action='version',
-                        version='%s' % (version))
+                        version='{}'.format(version))
 
     parser.add_argument(
         'str_file',
@@ -125,9 +132,9 @@ def load_file(filename):
     elif filename.split('.')[-1] == 'gz':
         filehandle = gzip.open(filename, 'rt')
     elif filename.split('.')[-1] == 'bz2':
-        filehandle = bz2.BZFile(filename)
+        filehandle = bz2.open(filename, 'rt')
     elif filename.split('.')[-1] == 'zip':
-        filehandle = zipfile.Zipfile(filename)
+        filehandle = zipfile.ZipFile(filename)
     else:
         filehandle = open(filename)
     return filehandle
@@ -155,7 +162,7 @@ def main():
 
     # delimited file handler
     csv_reader_obj = csv.reader(fileobj, delimiter=args.delimiter_str)
-    
+    header = next(csv_reader_obj)
     # WORK FROM HERE:
 
     # ------------------------------------------------------
