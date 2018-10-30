@@ -47,16 +47,20 @@ __author__ = '{{cookiecutter.author_name}}'
 
 # For color handling on the shell
 try:
-    from colorama import init, Fore, Style
+    from colorama import init, Fore
     # INIT color
     # Initialise colours for multi-platform support.
     init()
-    reset=Fore.RESET
-    colors = {'success': Fore.GREEN, 'error': Fore.RED, 'warning': Fore.YELLOW, 'info':''}
+    reset = Fore.RESET
+    colors = {'success': Fore.GREEN,
+              'error': Fore.RED,
+              'warning': Fore.YELLOW,
+              'info':''}
 except ImportError:
     sys.stderr.write('colorama lib desirable. Install with "conda install colorama".\n\n')
-    reset=''
-    colors = {'success': '', 'error': '', 'warning': '', 'info':''}
+    reset = ''
+    colors = {'success': '', 'error': '', 'warning': '', 'info': ''}
+
 
 def alert(atype, text, log, repeat=False):
     if repeat:
@@ -68,26 +72,30 @@ def alert(atype, text, log, repeat=False):
                                         atype.rjust(7),
                                         text)
 
-    
     log.write('{}{}{}'.format(colors[atype], textout, reset))
-    if atype=='error': sys.exit()
+    if atype == 'error':
+        sys.exit()
+
 
 def success(text, log=sys.stderr):
     alert('success', text, log)
 
+
 def error(text, log=sys.stderr):
     alert('error', text, log)
 
+
 def warning(text, log=sys.stderr):
     alert('warning', text, log)
-    
-def info(text, log=sys.stderr, repeat=False):
-    alert('info', text, log)  
 
-    
+
+def info(text, log=sys.stderr, repeat=False):
+    alert('info', text, log)
+
+
 def parse_cmdline():
     """ Parse command-line args. """
-    ## parse cmd-line -----------------------------------------------------------
+    # parse cmd-line ----------------------------------------------------------
     description = 'Read delimited file.'
     version = 'version {}, date {}'.format(__version__, __date__)
     epilog = 'Copyright {} ({})'.format(__author__, __email__)
@@ -101,8 +109,7 @@ def parse_cmdline():
     parser.add_argument(
         'str_file',
         metavar='FILE',
-        help=
-        'Delimited file. [if set to "-" or "stdin" reads from standard in]')
+        help='Delimited file. [use "-" or "stdin" to read from standard in]')
     parser.add_argument('-d',
                         '--delimiter',
                         metavar='STRING',
@@ -117,10 +124,10 @@ def parse_cmdline():
                         help='Out-file. [default: "stdout"]')
 
     # if no arguments supplied print help
-    if len(sys.argv)==1:
+    if len(sys.argv) == 1:
         parser.print_help()
         sys.exit(1)
-    
+
     args = parser.parse_args()
     return args, parser
 
@@ -146,7 +153,7 @@ def main():
 
     try:
         fileobj = load_file(args.str_file)
-    except:
+    except IOError:
         error('Could not load file. EXIT.')
 
     # create outfile object
@@ -159,10 +166,10 @@ def main():
     else:
         outfileobj = open(args.outfile_name, 'w')
 
-
     # delimited file handler
     csv_reader_obj = csv.reader(fileobj, delimiter=args.delimiter_str)
     header = next(csv_reader_obj)
+    print('{}\n'.format(args.delimter_str.join(header)))
     # WORK FROM HERE:
 
     # ------------------------------------------------------
