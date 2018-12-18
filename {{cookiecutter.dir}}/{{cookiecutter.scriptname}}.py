@@ -19,26 +19,19 @@ VERSION HISTORY
 
 LICENCE
 =======
-{{cookiecutter.date}}, copyright {{cookiecutter.author_name}}, ({{cookiecutter.author_email}}), {{cookiecutter.author_www}}
+{{cookiecutter.date}}, copyright {{cookiecutter.author_name}}
+{{cookiecutter.author_email}} // {{cookiecutter.author_www}}
 
-template version: 1.9 (2017/12/08)
+template version: 2.0 (2018/12/19)
 """
-from signal import signal, SIGPIPE, SIG_DFL
 import sys
 import os
-import os.path
 import argparse
 import csv
-import collections
 import gzip
 import bz2
 import zipfile
 import time
-
-# When piping stdout into head python raises an exception
-# Ignore SIG_PIPE and don't throw exceptions on it...
-# (http://docs.python.org/library/signal.html)
-signal(SIGPIPE, SIG_DFL)
 
 __version__ = '{{cookiecutter.version}}'
 __date__ = '{{cookiecutter.date}}'
@@ -55,9 +48,10 @@ try:
     colors = {'success': Fore.GREEN,
               'error': Fore.RED,
               'warning': Fore.YELLOW,
-              'info':''}
+              'info': ''}
 except ImportError:
-    sys.stderr.write('colorama lib desirable. Install with "conda install colorama".\n\n')
+    sys.stderr.write('colorama lib desirable. ' +
+                     'Install with "conda install colorama".\n\n')
     reset = ''
     colors = {'success': '', 'error': '', 'warning': '', 'info': ''}
 
@@ -169,9 +163,24 @@ def main():
     # delimited file handler
     csv_reader_obj = csv.reader(fileobj, delimiter=args.delimiter_str)
     header = next(csv_reader_obj)
-    print('{}\n'.format(args.delimiter_str.join(header)))
-    for a in csv_reader_obj:
-        print('{}\n'.format(args.delimiter_str.join(a)))
+
+    # For printing to stdout
+    # SIGPIPE is throwing exception when piping output to other tools
+    # like head. => http://docs.python.org/library/signal.html
+    # use a try - except clause to handle
+    try:
+        print('{}\n'.format(args.delimiter_str.join(header)))
+        for a in csv_reader_obj:
+            print('{}\n'.format(args.delimiter_str.join(a)))
+        # flush output here to force SIGPIPE to be triggered
+        # while inside this try block.
+        sys.stdout.flush()
+    except BrokenPipeError:
+        # Python flushes standard streams on exit; redirect remaining output
+        # to devnull to avoid another BrokenPipeError at shut-down
+        devnull = os.open(os.devnull, os.O_WRONLY)
+        os.dup2(devnull, sys.stdout.fileno())
+        sys.exit(1)  # Python exits with error code 1 on EPIPE
 
     # ------------------------------------------------------
     outfileobj.close()
@@ -180,4 +189,3 @@ def main():
 
 if __name__ == '__main__':
     sys.exit(main())
-
