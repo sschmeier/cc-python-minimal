@@ -169,9 +169,9 @@ def main():
     # like head. => http://docs.python.org/library/signal.html
     # use a try - except clause to handle
     try:
-        print('{}\n'.format(args.delimiter_str.join(header)))
+        outfileobj.write('{}\n'.format(args.delimiter_str.join(header)))
         for a in csv_reader_obj:
-            print('{}\n'.format(args.delimiter_str.join(a)))
+            outfileobj.write('{}\n'.format(args.delimiter_str.join(a)))
         # flush output here to force SIGPIPE to be triggered
         # while inside this try block.
         sys.stdout.flush()
