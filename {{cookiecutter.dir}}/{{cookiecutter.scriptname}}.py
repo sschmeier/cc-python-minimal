@@ -68,7 +68,7 @@ def alert(atype, text, log, repeat=False):
 
     log.write('{}{}{}'.format(colors[atype], textout, reset))
     if atype == 'error':
-        sys.exit(1)
+        raise SystemExit
 
 
 def success(text, log=sys.stderr):
@@ -120,7 +120,7 @@ def parse_cmdline():
     # if no arguments supplied print help
     if len(sys.argv) == 1:
         parser.print_help()
-        sys.exit(1)
+        raise SystemExit
 
     args = parser.parse_args()
     return args, parser
