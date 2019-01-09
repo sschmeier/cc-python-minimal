@@ -68,7 +68,7 @@ def alert(atype, text, log, repeat=False):
 
     log.write('{}{}{}'.format(colors[atype], textout, reset))
     if atype == 'error':
-        sys.exit()
+        sys.exit(1)
 
 
 def success(text, log=sys.stderr):
