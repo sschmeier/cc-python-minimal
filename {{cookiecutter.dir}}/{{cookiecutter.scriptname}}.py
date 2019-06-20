@@ -24,6 +24,11 @@ LICENCE
 
 template version: 2.0 (2018/12/19)
 """
+__version__ = '{{cookiecutter.version}}'
+__date__ = '{{cookiecutter.date}}'
+__email__ = '{{cookiecutter.author_email}}'
+__author__ = '{{cookiecutter.author_name}}'
+
 import sys
 import os
 import argparse
@@ -33,12 +38,7 @@ import bz2
 import zipfile
 import time
 
-__version__ = '{{cookiecutter.version}}'
-__date__ = '{{cookiecutter.date}}'
-__email__ = '{{cookiecutter.author_email}}'
-__author__ = '{{cookiecutter.author_name}}'
-
-# For color handling on the shell
+# non-standard lib: For color handling on the shell
 try:
     from colorama import init, Fore
     # INIT color
@@ -56,7 +56,7 @@ except ImportError:
     colors = {'success': '', 'error': '', 'warning': '', 'info': ''}
 
 
-def alert(atype, text, log, repeat=False):
+def alert(atype, text, log, repeat=False, flush=False):
     if repeat:
         textout = '{} [{}] {}\r'.format(time.strftime('%Y%m%d-%H:%M:%S'),
                                         atype.rjust(7),
@@ -67,24 +67,26 @@ def alert(atype, text, log, repeat=False):
                                         text)
 
     log.write('{}{}{}'.format(colors[atype], textout, reset))
+    if flush:
+        log.flush()
     if atype == 'error':
         sys.exit(1)
 
 
-def success(text, log=sys.stderr):
-    alert('success', text, log)
+def success(text, log=sys.stderr, flush=True):
+    alert('success', text, log, flush=flush)
 
 
-def error(text, log=sys.stderr):
-    alert('error', text, log)
+def error(text, log=sys.stderr, flush=True):
+    alert('error', text, log, flush=flush)
 
 
-def warning(text, log=sys.stderr):
-    alert('warning', text, log)
+def warning(text, log=sys.stderr, flush=True):
+    alert('warning', text, log, flush=flush)
 
 
-def info(text, log=sys.stderr, repeat=False):
-    alert('info', text, log)
+def info(text, log=sys.stderr, repeat=False, flush=True):
+    alert('info', text, log, repeat=repeat, flush=flush)
 
 
 def parse_cmdline():
@@ -157,6 +159,8 @@ def main():
         outfileobj = sys.stdout
     elif args.outfile_name.split('.')[-1] == 'gz':
         outfileobj = gzip.open(args.outfile_name, 'wt')
+    elif args.outfile_name.split('.')[-1] == 'bz2':
+        outfileobj = bz2.BZ2File(args.outfile_name, 'wt')
     else:
         outfileobj = open(args.outfile_name, 'w')
 
