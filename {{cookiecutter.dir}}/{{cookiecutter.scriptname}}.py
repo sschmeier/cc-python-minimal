@@ -24,10 +24,10 @@ LICENCE
 
 template version: 2.0 (2018/12/19)
 """
-__version__ = '{{cookiecutter.version}}'
-__date__ = '{{cookiecutter.date}}'
-__email__ = '{{cookiecutter.author_email}}'
-__author__ = '{{cookiecutter.author_name}}'
+__version__ = "{{cookiecutter.version}}"
+__date__ = "{{cookiecutter.date}}"
+__email__ = "{{cookiecutter.author_email}}"
+__author__ = "{{cookiecutter.author_name}}"
 
 import sys
 import os
@@ -41,83 +41,90 @@ import time
 # non-standard lib: For color handling on the shell
 try:
     from colorama import init, Fore
+
     # INIT color
     # Initialise colours for multi-platform support.
     init()
     reset = Fore.RESET
-    colors = {'success': Fore.GREEN,
-              'error': Fore.RED,
-              'warning': Fore.YELLOW,
-              'info': ''}
+    colors = {
+        "success": Fore.GREEN,
+        "error": Fore.RED,
+        "warning": Fore.YELLOW,
+        "info": "",
+    }
 except ImportError:
-    sys.stderr.write('colorama lib desirable. ' +
-                     'Install with "conda install colorama".\n\n')
-    reset = ''
-    colors = {'success': '', 'error': '', 'warning': '', 'info': ''}
+    sys.stderr.write(
+        "colorama lib desirable. " + 'Install with "conda install colorama".\n\n'
+    )
+    reset = ""
+    colors = {"success": "", "error": "", "warning": "", "info": ""}
 
 
 def alert(atype, text, log, repeat=False, flush=False):
     if repeat:
-        textout = '{} [{}] {}\r'.format(time.strftime('%Y%m%d-%H:%M:%S'),
-                                        atype.rjust(7),
-                                        text)
+        textout = "{} [{}] {}\r".format(
+            time.strftime("%Y%m%d-%H:%M:%S"), atype.rjust(7), text
+        )
     else:
-        textout = '{} [{}] {}\n'.format(time.strftime('%Y%m%d-%H:%M:%S'),
-                                        atype.rjust(7),
-                                        text)
+        textout = "{} [{}] {}\n".format(
+            time.strftime("%Y%m%d-%H:%M:%S"), atype.rjust(7), text
+        )
 
-    log.write('{}{}{}'.format(colors[atype], textout, reset))
+    log.write("{}{}{}".format(colors[atype], textout, reset))
     if flush:
         log.flush()
-    if atype == 'error':
+    if atype == "error":
         sys.exit(1)
 
 
 def success(text, log=sys.stderr, flush=True):
-    alert('success', text, log, flush=flush)
+    alert("success", text, log, flush=flush)
 
 
 def error(text, log=sys.stderr, flush=True):
-    alert('error', text, log, flush=flush)
+    alert("error", text, log, flush=flush)
 
 
 def warning(text, log=sys.stderr, flush=True):
-    alert('warning', text, log, flush=flush)
+    alert("warning", text, log, flush=flush)
 
 
 def info(text, log=sys.stderr, repeat=False, flush=True):
-    alert('info', text, log, repeat=repeat, flush=flush)
+    alert("info", text, log, repeat=repeat, flush=flush)
 
 
 def parse_cmdline():
     """ Parse command-line args. """
     # parse cmd-line ----------------------------------------------------------
-    description = 'Read delimited file.'
-    version = 'version {}, date {}'.format(__version__, __date__)
-    epilog = 'Copyright {} ({})'.format(__author__, __email__)
+    description = "Read delimited file."
+    version = "version {}, date {}".format(__version__, __date__)
+    epilog = "Copyright {} ({})".format(__author__, __email__)
 
     parser = argparse.ArgumentParser(description=description, epilog=epilog)
 
-    parser.add_argument('--version',
-                        action='version',
-                        version='{}'.format(version))
+    parser.add_argument("--version", action="version", version="{}".format(version))
 
     parser.add_argument(
-        'str_file',
-        metavar='FILE',
-        help='Delimited file. [use "-" or "stdin" to read from standard in]')
-    parser.add_argument('-d',
-                        '--delimiter',
-                        metavar='STRING',
-                        dest='delimiter_str',
-                        default='\t',
-                        help='Delimiter used in file.  [default: "tab"]')
-    parser.add_argument('-o',
-                        '--out',
-                        metavar='STRING',
-                        dest='outfile_name',
-                        default=None,
-                        help='Out-file. [default: "stdout"]')
+        "str_file",
+        metavar="FILE",
+        help='Delimited file. [use "-" or "stdin" to read from standard in]',
+    )
+    parser.add_argument(
+        "-d",
+        "--delimiter",
+        metavar="STRING",
+        dest="delimiter_str",
+        default="\t",
+        help='Delimiter used in file.  [default: "tab"]',
+    )
+    parser.add_argument(
+        "-o",
+        "--out",
+        metavar="STRING",
+        dest="outfile_name",
+        default=None,
+        help='Out-file. [default: "stdout"]',
+    )
 
     # if no arguments supplied print help
     if len(sys.argv) == 1:
@@ -130,13 +137,13 @@ def parse_cmdline():
 
 def load_file(filename):
     """ LOADING FILES """
-    if filename in ['-', 'stdin']:
+    if filename in ["-", "stdin"]:
         filehandle = sys.stdin
-    elif filename.split('.')[-1] == 'gz':
-        filehandle = gzip.open(filename, 'rt')
-    elif filename.split('.')[-1] == 'bz2':
-        filehandle = bz2.open(filename, 'rt')
-    elif filename.split('.')[-1] == 'zip':
+    elif filename.split(".")[-1] == "gz":
+        filehandle = gzip.open(filename, "rt")
+    elif filename.split(".")[-1] == "bz2":
+        filehandle = bz2.open(filename, "rt")
+    elif filename.split(".")[-1] == "zip":
         filehandle = zipfile.ZipFile(filename)
     else:
         filehandle = open(filename)
@@ -155,14 +162,14 @@ def main():
     # create outfile object
     if not args.outfile_name:
         outfileobj = sys.stdout
-    elif args.outfile_name in ['-', 'stdout']:
+    elif args.outfile_name in ["-", "stdout"]:
         outfileobj = sys.stdout
-    elif args.outfile_name.split('.')[-1] == 'gz':
-        outfileobj = gzip.open(args.outfile_name, 'wt')
-    elif args.outfile_name.split('.')[-1] == 'bz2':
-        outfileobj = bz2.BZ2File(args.outfile_name, 'wt')
+    elif args.outfile_name.split(".")[-1] == "gz":
+        outfileobj = gzip.open(args.outfile_name, "wt")
+    elif args.outfile_name.split(".")[-1] == "bz2":
+        outfileobj = bz2.BZ2File(args.outfile_name, "wt")
     else:
-        outfileobj = open(args.outfile_name, 'w')
+        outfileobj = open(args.outfile_name, "w")
 
     # delimited file handler
     csv_reader_obj = csv.reader(fileobj, delimiter=args.delimiter_str)
@@ -173,9 +180,9 @@ def main():
     # like head. => http://docs.python.org/library/signal.html
     # use a try - except clause to handle
     try:
-        outfileobj.write('{}\n'.format(args.delimiter_str.join(header)))
+        outfileobj.write("{}\n".format(args.delimiter_str.join(header)))
         for a in csv_reader_obj:
-            outfileobj.write('{}\n'.format(args.delimiter_str.join(a)))
+            outfileobj.write("{}\n".format(args.delimiter_str.join(a)))
         # flush output here to force SIGPIPE to be triggered
         # while inside this try block.
         sys.stdout.flush()
@@ -191,5 +198,5 @@ def main():
     return
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(main())
