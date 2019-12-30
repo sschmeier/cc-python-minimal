@@ -28,6 +28,7 @@ __version__ = "{{cookiecutter.version}}"
 __date__ = "{{cookiecutter.date}}"
 __email__ = "{{cookiecutter.author_email}}"
 __author__ = "{{cookiecutter.author_name}}"
+_program = "{{cookiecutter.scriptname}}"
 
 import sys
 import os
@@ -93,6 +94,20 @@ def info(text, log=sys.stderr, repeat=False, flush=True):
     alert("info", text, log, repeat=repeat, flush=flush)
 
 
+def print_logo():
+    try:
+        from pyfiglet import figlet_format
+
+        text = figlet_format(_program, font="slant")
+    except ImportError:
+        text = "\n\t\t{}\n\n".format(_program)
+    sys.stdout.write("{}\n".format("*" * 60))
+    sys.stdout.write(text)
+    sys.stdout.write("version: {}  date: {}\n".format(__version__, __date__))
+    sys.stdout.write("Using executable at: {}\n".format(thisdir))
+    sys.stdout.write("{}\n\n".format("*" * 60))
+
+
 def parse_cmdline():
     """ Parse command-line args. """
     # parse cmd-line ----------------------------------------------------------
@@ -152,6 +167,7 @@ def load_file(filename):
 
 def main():
     """ The main funtion. """
+    print_logo()
     args, parser = parse_cmdline()
 
     try:
