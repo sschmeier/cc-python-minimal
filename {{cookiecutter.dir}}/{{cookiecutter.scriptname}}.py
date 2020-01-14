@@ -39,6 +39,8 @@ import bz2
 import zipfile
 import time
 
+_programpath = os.path.realpath(__file__)
+
 # non-standard lib: For color handling on the shell
 try:
     from colorama import init, Fore
@@ -104,7 +106,7 @@ def print_logo():
     sys.stdout.write("{}\n".format("*" * 60))
     sys.stdout.write(text)
     sys.stdout.write("version: {}  date: {}\n".format(__version__, __date__))
-    sys.stdout.write("Using executable at: {}\n".format(thisdir))
+    sys.stdout.write("Using executable at: {}\n".format(_programpath))
     sys.stdout.write("{}\n\n".format("*" * 60))
 
 
