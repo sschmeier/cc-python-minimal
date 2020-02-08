@@ -1,34 +1,33 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 """
 NAME: {{cookiecutter.scriptname}}
-=========
+=====================
 
 DESCRIPTION
-===========
+-----------
 
 INSTALLATION
-============
+------------
 
 USAGE
-=====
+-----
 
 VERSION HISTORY
-===============
+---------------
 
 {{cookiecutter.version}}    {{cookiecutter.date}}    Initial version.
 
 LICENCE
-=======
+-------
 {{cookiecutter.date}}, copyright {{cookiecutter.author_name}}
 {{cookiecutter.author_email}} // {{cookiecutter.author_www}}
 
-template version: 2.0 (2018/12/19)
+template version: 2.2 (2020/02/08)
 """
 __version__ = "{{cookiecutter.version}}"
 __date__ = "{{cookiecutter.date}}"
 __email__ = "{{cookiecutter.author_email}}"
 __author__ = "{{cookiecutter.author_name}}"
-_program = "{{cookiecutter.scriptname}}"
 
 import sys
 import os
@@ -38,76 +37,26 @@ import gzip
 import bz2
 import zipfile
 import time
+import logging
+
+# set up logging
+logger = logging.getLogger()
 
 _programpath = os.path.realpath(__file__)
 
-# non-standard lib: For color handling on the shell
-try:
-    from colorama import init, Fore
 
-    # INIT color
-    # Initialise colours for multi-platform support.
-    init()
-    reset = Fore.RESET
-    colors = {
-        "success": Fore.GREEN,
-        "error": Fore.RED,
-        "warning": Fore.YELLOW,
-        "info": "",
-    }
-except ImportError:
-    sys.stderr.write(
-        "colorama lib desirable. " + 'Install with "conda install colorama".\n\n'
-    )
-    reset = ""
-    colors = {"success": "", "error": "", "warning": "", "info": ""}
-
-
-def alert(atype, text, log, repeat=False, flush=False):
-    if repeat:
-        textout = "{} [{}] {}\r".format(
-            time.strftime("%Y%m%d-%H:%M:%S"), atype.rjust(7), text
-        )
-    else:
-        textout = "{} [{}] {}\n".format(
-            time.strftime("%Y%m%d-%H:%M:%S"), atype.rjust(7), text
-        )
-
-    log.write("{}{}{}".format(colors[atype], textout, reset))
-    if flush:
-        log.flush()
-    if atype == "error":
-        sys.exit(1)
-
-
-def success(text, log=sys.stderr, flush=True):
-    alert("success", text, log, flush=flush)
-
-
-def error(text, log=sys.stderr, flush=True):
-    alert("error", text, log, flush=flush)
-
-
-def warning(text, log=sys.stderr, flush=True):
-    alert("warning", text, log, flush=flush)
-
-
-def info(text, log=sys.stderr, repeat=False, flush=True):
-    alert("info", text, log, repeat=repeat, flush=flush)
-
-
-def print_logo():
+def print_logo(filehandle=sys.stderr):
     try:
         from pyfiglet import figlet_format
 
-        text = figlet_format(_program, font="slant")
+        text = figlet_format("{{cookiecutter.scriptname}}", font="slant")
     except ImportError:
-        text = "\n\t\t{}\n\n".format(_program)
-    sys.stdout.write("{}\n".format("*" * 60))
-    sys.stdout.write(text)
-    sys.stdout.write("version: {}  date: {}\n".format(__version__, __date__))
-    sys.stdout.write("Using executable at: {}\n".format(_programpath))
-    sys.stdout.write("{}\n\n".format("*" * 60))
+        text = "\n\t\t{}\n\n".format("{{cookiecutter.scriptname}}")
+    filehandle.write("{}\n".format("*" * 60))
+    filehandle.write(text)
+    filehandle.write("version: {}  date: {}\n".format(__version__, __date__))
+    filehandle.write("Using executable at: {}\n".format(_programpath))
+    filehandle.write("{}\n\n".format("*" * 60))
 
 
 def parse_cmdline():
@@ -143,6 +92,15 @@ def parse_cmdline():
         help='Out-file. [default: "stdout"]',
     )
 
+    log = parser.add_argument_group("logging arguments")
+    log.add_argument(
+        "--log",
+        metavar="STRING",
+        dest="loglevel",
+        default="INFO",
+        help='Logging level. [default: "INFO"]',
+    )
+
     # if no arguments supplied print help
     if len(sys.argv) == 1:
         parser.print_help()
@@ -152,8 +110,8 @@ def parse_cmdline():
     return args, parser
 
 
-def load_file(filename):
-    """ LOADING FILES """
+def open_infile(filename):
+    """ OPEN FILES FOR READING """
     if filename in ["-", "stdin"]:
         filehandle = sys.stdin
     elif filename.split(".")[-1] == "gz":
@@ -167,52 +125,81 @@ def load_file(filename):
     return filehandle
 
 
+def get_outfile(filename):
+    """ Create outfile object """
+    if not filename:
+        filehandle = sys.stdout
+    elif filename in ["-", "stdout"]:
+        filehandle = sys.stdout
+    elif filename.split(".")[-1] == "gz":
+        filehandle = gzip.open(filename, "wt")
+    elif filename.split(".")[-1] == "bz2":
+        filehandle = bz2.BZ2File(filename, "wt")
+    else:
+        filehandle = open(filename, "w")
+    return filehandle
+
+
 def main():
     """ The main funtion. """
-    print_logo()
+    # comment out to remove logo printing
+    print_logo(filehandle=sys.stderr)
+    # parse commandline args
     args, parser = parse_cmdline()
 
-    try:
-        fileobj = load_file(args.str_file)
-    except IOError:
-        error('Could not load file "{}". EXIT.'.format(args.str_file))
+    # set up logger
+    numeric_level = getattr(logging, args.loglevel.upper(), None)
+    if not isinstance(numeric_level, int):
+        raise ValueError(f"Invalid log level: {args.loglevel}")
+    logging.basicConfig(
+        level=numeric_level,
+        format="%(asctime)s [%(levelname)8s] (%(filename)s:%(funcName)20s():%(lineno)4s): %(message)s ",
+        datefmt="%Y%m%d-%H:%M:%S",
+    )
+    logger.info("Program start.")
+    # test the logging system
+    # logger.debug("Debug event")
+    # logger.critical("Critical event")
 
-    # create outfile object
-    if not args.outfile_name:
-        outfileobj = sys.stdout
-    elif args.outfile_name in ["-", "stdout"]:
-        outfileobj = sys.stdout
-    elif args.outfile_name.split(".")[-1] == "gz":
-        outfileobj = gzip.open(args.outfile_name, "wt")
-    elif args.outfile_name.split(".")[-1] == "bz2":
-        outfileobj = bz2.BZ2File(args.outfile_name, "wt")
-    else:
-        outfileobj = open(args.outfile_name, "w")
+    try:
+        fileobj = open_infile(args.str_file)
+    except FileNotFoundError as e:
+        logger.critical(f'Could not load file "{args.str_file}". EXIT.')
+        raise
 
     # delimited file handler
     csv_reader_obj = csv.reader(fileobj, delimiter=args.delimiter_str)
+    # get header
     header = next(csv_reader_obj)
 
-    # For printing to stdout
-    # SIGPIPE is throwing exception when piping output to other tools
-    # like head. => http://docs.python.org/library/signal.html
-    # use a try - except clause to handle
-    try:
-        outfileobj.write("{}\n".format(args.delimiter_str.join(header)))
-        for a in csv_reader_obj:
-            outfileobj.write("{}\n".format(args.delimiter_str.join(a)))
-        # flush output here to force SIGPIPE to be triggered
-        # while inside this try block.
-        sys.stdout.flush()
-    except BrokenPipeError:
-        # Python flushes standard streams on exit; redirect remaining output
-        # to devnull to avoid another BrokenPipeError at shut-down
-        devnull = os.open(os.devnull, os.O_WRONLY)
-        os.dup2(devnull, sys.stdout.fileno())
-        sys.exit(1)  # Python exits with error code 1 on EPIPE
+    # outfileobj = get_outfile(args.outfile_name)
+    # contextmanager better, no closing file required
+    with get_outfile(args.outfile_name) as outfileobj:
+        # For printing to stdout
+        # SIGPIPE is throwing exception when piping output to other tools
+        # like head. => http://docs.python.org/library/signal.html
+        # use a try - except clause to handle
+        try:
+            # HERE THE MAIN STUFF IS HAPPENING
+            outfileobj.write("{}\n".format(args.delimiter_str.join(header)))
+            for a in csv_reader_obj:
+                # DO stuff
+                # ...
+                # print
+                outfileobj.write("{}\n".format(args.delimiter_str.join(a)))
+            # flush output here to force SIGPIPE to be triggered
+            # while inside this try block.
+            sys.stdout.flush()
+        except BrokenPipeError:
+            # Python flushes standard streams on exit; redirect remaining output
+            # to devnull to avoid another BrokenPipeError at shut-down
+            devnull = os.open(os.devnull, os.O_WRONLY)
+            os.dup2(devnull, sys.stdout.fileno())
+            sys.exit(1)  # Python exits with error code 1 on EPIPE
 
     # ------------------------------------------------------
-    outfileobj.close()
+    # outfileobj.close()
+    fileobj.close()
     return
 
 
