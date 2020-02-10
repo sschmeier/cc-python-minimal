@@ -29,6 +29,15 @@ __date__ = "{{cookiecutter.date}}"
 __email__ = "{{cookiecutter.author_email}}"
 __author__ = "{{cookiecutter.author_name}}"
 
+# Generate your own AsciiArt at:
+# https://patorjk.com/software/taag/#f=Calvin%20S&t=pyscript
+__banner__ = r"""
+  ┌─┐┬ ┬┌─┐┌─┐┬─┐┬┌─┐┌┬┐
+  ├─┘└┬┘└─┐│  ├┬┘│├─┘ │  
+  ┴   ┴ └─┘└─┘┴└─┴┴   ┴ 
+        by {{cookiecutter.author_name}}
+"""
+
 import sys
 import os
 import argparse
@@ -46,12 +55,7 @@ _programpath = os.path.realpath(__file__)
 
 
 def print_logo(filehandle=sys.stderr):
-    try:
-        from pyfiglet import figlet_format
-
-        text = figlet_format("{{cookiecutter.scriptname}}", font="slant")
-    except ImportError:
-        text = "\n\t\t{}\n\n".format("{{cookiecutter.scriptname}}")
+    text = f"{__banner__}\n"
     filehandle.write("{}\n".format("*" * 60))
     filehandle.write(text)
     filehandle.write("version: {}  date: {}\n".format(__version__, __date__))
@@ -153,7 +157,7 @@ def main():
         raise ValueError(f"Invalid log level: {args.loglevel}")
     logging.basicConfig(
         level=numeric_level,
-        format="%(asctime)s [%(levelname)8s] (%(filename)s:%(funcName)20s():%(lineno)4s): %(message)s ",
+        format="%(asctime)s [%(levelname)8s] (%(filename)s:%(funcName)15s():%(lineno)4s): %(message)s ",
         datefmt="%Y%m%d-%H:%M:%S",
     )
     logger.info("Program start.")
@@ -182,6 +186,15 @@ def main():
         try:
             # HERE THE MAIN STUFF IS HAPPENING
             outfileobj.write("{}\n".format(args.delimiter_str.join(header)))
+
+            # use tqdm for nice progress bars
+            # e.g. wrap any iterator
+            # for a in tqdm(csv_reader_obj):
+            # try:
+            #     from tqdm import tqdm
+            # except ImportError:
+            #     raise
+
             for a in csv_reader_obj:
                 # DO stuff
                 # ...
