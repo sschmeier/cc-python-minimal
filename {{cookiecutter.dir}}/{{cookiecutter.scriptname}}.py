@@ -47,6 +47,7 @@ import bz2
 import zipfile
 import time
 import logging
+import subprocess
 
 # set up logging
 logger = logging.getLogger()
@@ -112,6 +113,21 @@ def parse_cmdline():
 
     args = parser.parse_args()
     return args, parser
+
+
+def yield_line_gz_file(filename):
+    """
+    :param filename: String (absolute path)
+    :return: GeneratorFunction (yields String)
+
+    Reads gzip files line by line much faster then gzip.open()
+    Use:
+         for line in yield_line_gz_file(filename):
+             do_something(line)
+    """
+    ph = subprocess.Popen(["zcat", filename], stdout=subprocess.PIPE)
+    for line in ph.stdout:
+        yield line
 
 
 def open_infile(filename):
