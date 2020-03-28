@@ -30,7 +30,7 @@ __email__ = "{{cookiecutter.author_email}}"
 __author__ = "{{cookiecutter.author_name}}"
 
 # Generate your own AsciiArt at:
-# https://patorjk.com/software/taag/#f=Calvin%20S&t=pyscript
+# http://patorjk.com/software/taag/#p=display&f=Calvin%20S&t=pyscript
 __banner__ = r"""
   ┌─┐┬ ┬┌─┐┌─┐┬─┐┬┌─┐┌┬┐
   ├─┘└┬┘└─┐│  ├┬┘│├─┘ │  
